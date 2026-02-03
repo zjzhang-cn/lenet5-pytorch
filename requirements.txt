@@ -1,0 +1,28 @@
+# LeNet-5 MNIST Classification Project Requirements
+# Core PyTorch packages
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Data science and visualization
+numpy>=1.21.0
+matplotlib>=3.5.0
+
+# Image processing
+Pillow>=8.0.0
+
+# Optional: For better performance and additional features
+# scipy>=1.7.0
+# scikit-learn>=1.0.0
+
+# Development and debugging (optional)
+# jupyter>=1.0.0
+# ipykernel>=6.0.0
+# tqdm>=4.64.0
+
+# For experiment tracking (optional)
+# wandb>=0.12.0
+# tensorboard>=2.8.0
+
+# For additional image processing (optional)
+# opencv-python>=4.5.0

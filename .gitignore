@@ -150,12 +150,7 @@ tb_logs/
 data/
 dataset/
 datasets/
-*.csv
-*.txt
-*.json
-*.xml
-*.h5
-*.hdf5
+
 
 # Image and media files (uncomment if datasets contain these)
 # *.jpg
@@ -246,7 +241,6 @@ $RECYCLE.BIN/
 .nfs*
 
 # Project specific
-training_history.png
 *.png
 *.jpg
 *.jpeg
