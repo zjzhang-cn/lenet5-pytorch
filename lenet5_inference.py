@@ -23,36 +23,36 @@ def get_device():
     else:
         return torch.device("cpu")
 
-def load_trained_model(model_path, device):
+def load_trained_model(model_path, device, model_class=LeNet5):
     """加载训练好的模型"""
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"模型文件未找到: {model_path}")
-    
+
     # 创建模型实例
-    model = LeNet5(num_classes=10)
-    
+    model = model_class(num_classes=10)
+
     # 加载模型权重
     checkpoint = torch.load(model_path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    
+
     # 设置为评估模式
     model.eval()
     model.to(device)
-    
+
     print(f"成功加载模型: {model_path}")
     return model
 
-def preprocess_image(image_path_or_array):
+def preprocess_image(image_path_or_array, input_size=32):
     """
-    预处理图像以适合LeNet-5模型
+    预处理图像以适合模型
     输入可以是图像路径或numpy数组
     """
     # 数据预处理管道
-    transform = transforms.Compose([
-        transforms.Resize((32, 32)),  # 调整为32x32（LeNet-5标准输入）
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))  # MNIST标准化参数
-    ])
+    transform_list = [transforms.ToTensor()]
+    if input_size != 28:
+        transform_list.insert(0, transforms.Resize((input_size, input_size)))
+    transform_list.append(transforms.Normalize((0.1307,), (0.3081,)))
+    transform = transforms.Compose(transform_list)
     
     if isinstance(image_path_or_array, str):
         # 如果输入是文件路径

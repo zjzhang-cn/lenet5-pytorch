@@ -30,17 +30,17 @@ def get_device():
     else:
         return torch.device("cpu")
 
-def load_data(batch_size=64):
+def load_data(batch_size=64, input_size=32):
     """
     加载和预处理MNIST数据集
     LeNet-5原论文中使用32x32的图像，所以我们需要将28x28的MNIST图像填充到32x32
     """
-    # 数据预处理：将图像大小调整为32x32（LeNet-5的标准输入）
-    transform = transforms.Compose([
-        transforms.Resize((32, 32)),  # 将28x28调整为32x32
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))  # MNIST数据集的标准化参数
-    ])
+    # 数据预处理：将图像大小调整为input_size（LeNet-5标准输入为32x32，CNN使用28x28）
+    transform_list = [transforms.ToTensor()]
+    if input_size != 28:
+        transform_list.insert(0, transforms.Resize((input_size, input_size)))
+    transform_list.append(transforms.Normalize((0.1307,), (0.3081,)))
+    transform = transforms.Compose(transform_list)
     
     # 下载和加载训练数据
     train_dataset = torchvision.datasets.MNIST(
@@ -64,12 +64,20 @@ def load_data(batch_size=64):
     
     return train_loader, test_loader
 
-def train_model(model, train_loader, test_loader, device, num_epochs=10, learning_rate=0.001):
+def train_model(model, train_loader, test_loader, device, num_epochs=10, learning_rate=0.001,
+                 optimizer_name='adam', scheduler_gamma=0.7, log_interval=None):
     """训练模型"""
-    
+
     # 损失函数和优化器
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    if optimizer_name == 'adam':
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        scheduler = None
+    elif optimizer_name == 'adadelta':
+        optimizer = optim.Adadelta(model.parameters(), lr=learning_rate)
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=scheduler_gamma)
+    else:
+        raise ValueError(f"不支持的优化器: {optimizer_name}")
     
     # 记录训练历史
     train_losses = []
@@ -106,15 +114,20 @@ def train_model(model, train_loader, test_loader, device, num_epochs=10, learnin
             total_train += target.size(0)
             correct_train += (predicted == target).sum().item()
             
-            if batch_idx % 200 == 0:
+            log_steps = log_interval if log_interval else 200
+            if batch_idx % log_steps == 0:
                 print(f'Epoch [{epoch+1}/{num_epochs}], Step [{batch_idx+1}/{len(train_loader)}], Loss: {loss.item():.4f}')
-        
+
         # 计算训练准确率
         train_accuracy = 100 * correct_train / total_train
         avg_train_loss = running_loss / len(train_loader)
-        
+
         # 测试阶段
         test_accuracy = evaluate_model(model, test_loader, device)
+
+        # 学习率调度器
+        if scheduler:
+            scheduler.step()
         
         # 记录历史
         train_losses.append(avg_train_loss)
@@ -147,11 +160,11 @@ def evaluate_model(model, test_loader, device):
     accuracy = 100 * correct / total
     return accuracy
 
-def save_model(model, filepath):
+def save_model(model, filepath, architecture_name='LeNet5'):
     """保存模型"""
     torch.save({
         'model_state_dict': model.state_dict(),
-        'model_architecture': 'LeNet5'
+        'model_architecture': architecture_name
     }, filepath)
     print(f"模型已保存到: {filepath}")
 
