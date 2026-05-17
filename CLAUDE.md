@@ -31,7 +31,7 @@ There is no test framework or linting setup in this project. `requirements.txt` 
 
 ## Architecture
 
-**`lenet5_model.py`** — LeNet-5 model definition. Classic architecture: Conv1(1→6) → AvgPool → Conv2(6→16) → AvgPool → FC(400→120) → FC(120→84) → FC(84→10). Uses `tanh` activation per the original 1998 paper. Input expects 32×32 grayscale images.
+**`lenet5.py`** — LeNet-5 model definition. Classic architecture: Conv1(1→6) → AvgPool → Conv2(6→16) → AvgPool → FC(400→120) → FC(120→84) → FC(84→10). Uses `tanh` activation per the original 1998 paper. Input expects 32×32 grayscale images.
 
 **`train.py`** — Unified model-agnostic training module. `load_data()` accepts `input_size` (32 for LeNet-5, 28 for CNN). `train_model()` supports `optimizer_name` ('adam' or 'adadelta') and optional StepLR scheduler. `save_model()` accepts `architecture_name` for unified dict-format checkpoint (`{'model_state_dict': ..., 'model_architecture': ...}`). Generates `training_history.png`.
 
@@ -41,7 +41,7 @@ There is no test framework or linting setup in this project. `requirements.txt` 
 
 **`main.py`** — Unified CLI entry point with subcommands: `train`, `evaluate`, `demo`, `predict`. All accept `--model lenet5|cnn` to switch architecture. Uses `MODEL_CONFIGS` dict for per-model defaults (input size, optimizer, save path).
 
-**`test.py`** — Simple one-off script to check MPS device availability.
+**`check_device.py`** — Simple one-off script to check MPS device availability.
 
 ## Device selection pattern
 

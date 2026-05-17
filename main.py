@@ -2,7 +2,7 @@ import argparse
 import sys
 import torch
 
-from lenet5_model import LeNet5
+from lenet5 import LeNet5
 from cnn import Net
 
 

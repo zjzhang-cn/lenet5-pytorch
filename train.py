@@ -19,7 +19,7 @@ import time
 matplotlib.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans']
 matplotlib.rcParams['axes.unicode_minus'] = False
 
-from lenet5_model import LeNet5
+from lenet5 import LeNet5
 
 def get_device():
     """获取可用的设备"""

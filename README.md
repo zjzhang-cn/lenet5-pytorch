@@ -6,11 +6,11 @@
 
 ```
 ├── main.py                # 统一CLI入口（推荐使用）
-├── lenet5_model.py        # LeNet-5模型定义
+├── lenet5.py              # LeNet-5模型定义
 ├── cnn.py                 # 现代CNN模型定义
 ├── train.py               # 统一训练模块
 ├── inference.py           # 统一推理模块
-├── test.py                # MPS设备检测脚本
+├── check_device.py        # MPS设备检测脚本
 ├── lenet5_mnist.pth       # 训练好的LeNet-5模型文件
 ├── training_history.png   # 训练历史图表
 ├── requirements.txt       # Python依赖项
