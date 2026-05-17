@@ -218,7 +218,6 @@ def cmd_train_cnn(args):
 def main():
     parser = argparse.ArgumentParser(description='LeNet-5 / CNN MNIST 统一入口')
     subparsers = parser.add_subparsers(dest='command', help='子命令')
-    subparsers.required = True
 
     # train
     p_train = subparsers.add_parser('train', help='训练 LeNet-5 模型')
@@ -262,6 +261,9 @@ def main():
     p_cnn.set_defaults(func=cmd_train_cnn)
 
     args = parser.parse_args()
+    if args.command is None:
+        parser.print_help()
+        sys.exit(0)
     args.func(args)
 
 
