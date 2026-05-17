@@ -36,7 +36,7 @@ MODEL_CONFIGS = {
 
 
 def cmd_train(args):
-    from lenet5_train import load_data, train_model, evaluate_model, save_model, plot_training_history
+    from train import load_data, train_model, evaluate_model, save_model, plot_training_history
 
     cfg = MODEL_CONFIGS[args.model]
     torch.manual_seed(args.seed)
@@ -85,7 +85,7 @@ def cmd_train(args):
 
 
 def cmd_evaluate(args):
-    from lenet5_inference import load_trained_model
+    from inference import load_trained_model
     from torchvision import datasets, transforms
     from torch.utils.data import DataLoader
     import numpy as np
@@ -139,7 +139,7 @@ def cmd_evaluate(args):
 
 def cmd_demo(args):
     import os
-    from lenet5_inference import load_trained_model, predict_single_image
+    from inference import load_trained_model, predict_single_image
     from torchvision import datasets, transforms
     import numpy as np
 
@@ -174,7 +174,7 @@ def cmd_demo(args):
 
 def cmd_predict(args):
     import os
-    from lenet5_inference import load_trained_model, preprocess_image, predict_single_image, visualize_prediction
+    from inference import load_trained_model, preprocess_image, predict_single_image, visualize_prediction
 
     cfg = MODEL_CONFIGS[args.model]
     device = get_device()

@@ -12,16 +12,18 @@ This is a small educational PyTorch project implementing LeNet-5 for MNIST handw
 # Install dependencies
 pip install -r requirements.txt
 
-# Unified CLI (recommended)
-python main.py train              # Train LeNet-5
-python main.py evaluate           # Evaluate on test set
-python main.py demo               # Demo predictions on random samples
-python main.py predict IMAGE_PATH # Predict custom image
-python main.py train-cnn          # Train modern CNN
+# Unified CLI (recommended) — use -m to select model
+python main.py train                  # Train LeNet-5 (default)
+python main.py train -m cnn           # Train modern CNN
+python main.py evaluate               # Evaluate on test set
+python main.py evaluate -m cnn        # Evaluate CNN
+python main.py demo --samples 5       # Demo predictions
+python main.py predict IMAGE_PATH     # Predict custom image
+python main.py predict -m cnn IMAGE   # Predict with CNN
 
 # Or run individual scripts directly
-python lenet5_train.py
-python lenet5_inference.py
+python train.py
+python inference.py
 python cnn.py
 ```
 
@@ -31,31 +33,29 @@ There is no test framework or linting setup in this project. `requirements.txt` 
 
 **`lenet5_model.py`** — LeNet-5 model definition. Classic architecture: Conv1(1→6) → AvgPool → Conv2(6→16) → AvgPool → FC(400→120) → FC(120→84) → FC(84→10). Uses `tanh` activation per the original 1998 paper. Input expects 32×32 grayscale images.
 
-**`lenet5_train.py`** — Training script. Loads MNIST via torchvision (auto-downloads to `./data/`), resizes from 28×28 to 32×32, normalizes with mean=0.1307/std=0.3081. Trains for 10 epochs with Adam (lr=0.001) and CrossEntropyLoss. Saves model as a dict with `model_state_dict` and `model_architecture` keys to `lenet5_mnist.pth`. Generates `training_history.png` with loss/accuracy/overfitting plots.
+**`train.py`** — Unified model-agnostic training module. `load_data()` accepts `input_size` (32 for LeNet-5, 28 for CNN). `train_model()` supports `optimizer_name` ('adam' or 'adadelta') and optional StepLR scheduler. `save_model()` accepts `architecture_name` for unified dict-format checkpoint (`{'model_state_dict': ..., 'model_architecture': ...}`). Generates `training_history.png`.
 
-**`lenet5_inference.py`** — Interactive inference script. Loads the saved `.pth` checkpoint. Three modes: random MNIST test samples demo, custom image prediction (accepts file paths or numpy arrays, auto-converts RGB→grayscale), and full test-set evaluation with per-class accuracy.
+**`inference.py`** — Unified model-agnostic inference module. `load_trained_model()` accepts `model_class` to load either LeNet-5 or CNN checkpoints. `preprocess_image()` accepts `input_size`. Also contains interactive `main()` for standalone use.
 
-**`cnn.py`** — A separate, unrelated modern CNN (`Net` class) with ReLU, MaxPool, Dropout, LogSoftmax+NLLLoss, and Adadelta optimizer. Uses argparse for configuration. Unlike the LeNet-5 scripts, it does not use the `get_device()` pattern — it defaults to CPU and requires `--use_gpu` to enable MPS. Accepts 28×28 input (no resize).
+**`cnn.py`** — Modern CNN model definition (`Net` class). Conv(1→32,3x3)→ReLU→Conv(32→64,3x3)→ReLU→MaxPool2d→Dropout(0.25)→FC(9216→128)→ReLU→Dropout(0.5)→FC(128→10). Accepts 28×28 input. Outputs raw logits (unified with LeNet-5 to use CrossEntropyLoss).
 
-**`main.py`** — Unified CLI entry point with subcommands: `train`, `evaluate`, `demo`, `predict`, `train-cnn`. Dispatch-only, all logic lives in the existing modules.
+**`main.py`** — Unified CLI entry point with subcommands: `train`, `evaluate`, `demo`, `predict`. All accept `--model lenet5|cnn` to switch architecture. Uses `MODEL_CONFIGS` dict for per-model defaults (input size, optimizer, save path).
 
 **`test.py`** — Simple one-off script to check MPS device availability.
 
 ## Device selection pattern
 
-The LeNet-5 scripts (`lenet5_train.py`, `lenet5_inference.py`) use a `get_device()` helper with priority: MPS → CUDA → CPU. Reuse this pattern for any new LeNet-5-related code.
-
-`cnn.py` does NOT follow this pattern — it defaults to CPU and only uses MPS when `--use_gpu` is explicitly passed. This inconsistency means `cnn.py` won't auto-detect Apple Silicon.
+All scripts use the `get_device()` helper with priority: MPS → CUDA → CPU. The helper is defined in both `train.py` and `inference.py`, and separately in `main.py` (since main.py dispatches without importing those modules at top level).
 
 ## Data conventions
 
 - MNIST data auto-downloaded to `./data/` by torchvision
-- Input images must be 32×32 grayscale (MNIST's native 28×28 gets resized)
+- LeNet-5 expects 32×32 input (MNIST's native 28×28 gets resized); CNN expects 28×28
 - Normalization: mean=0.1307, std=0.3081 (MNIST standard)
-- Model checkpoint format: `{'model_state_dict': ..., 'model_architecture': 'LeNet5'}`
-- Loading a checkpoint requires the `LeNet5` class to be importable (the checkpoint stores weights, not the model definition)
+- Model checkpoint format (unified): `{'model_state_dict': ..., 'model_architecture': 'LeNet5'|'CNN'}`
+- Both LeNet5 and Net accept `num_classes=10` constructor parameter
 
 ## Potential pitfalls
 
 - `DataLoader` uses `num_workers=2` — on some macOS versions this can cause crashes. If training hangs or crashes, set `num_workers=0`.
-- `cnn.py` uses LogSoftmax + NLLLoss, while LeNet-5 scripts use raw logits + CrossEntropyLoss. Don't mix the two approaches when moving code between files.
+- Both models now output raw logits + use `CrossEntropyLoss`. Do not use `LogSoftmax` + `NLLLoss`.

@@ -5,10 +5,11 @@
 ## 项目结构
 
 ```
+├── main.py                # 统一CLI入口（推荐使用）
 ├── lenet5_model.py        # LeNet-5模型定义
-├── lenet5_train.py        # LeNet-5模型训练脚本
-├── lenet5_inference.py    # LeNet-5模型推理脚本
-├── cnn.py                 # 现代CNN模型（对比参考）
+├── cnn.py                 # 现代CNN模型定义
+├── train.py               # 统一训练模块
+├── inference.py           # 统一推理模块
 ├── test.py                # MPS设备检测脚本
 ├── lenet5_mnist.pth       # 训练好的LeNet-5模型文件
 ├── training_history.png   # 训练历史图表
@@ -40,7 +41,7 @@ LeNet-5是Yann LeCun在1998年提出的经典卷积神经网络，包含：
 - 两个卷积层 (1→32→64 channels, 3x3 kernel)
 - ReLU激活 + MaxPool池化 + Dropout正则化
 - 两个全连接层 (9216→128→10)
-- LogSoftmax输出 + NLLLoss损失函数
+- 原始logits输出 + CrossEntropyLoss损失函数（与LeNet-5统一）
 - Adadelta优化器 + StepLR学习率调度
 
 ## 使用方法
@@ -51,67 +52,56 @@ LeNet-5是Yann LeCun在1998年提出的经典卷积神经网络，包含：
 pip install -r requirements.txt
 ```
 
-### 训练LeNet-5模型
+### 统一CLI（推荐）
 
 ```bash
-python lenet5_train.py
+# 训练
+python main.py train                      # 训练LeNet-5（默认）
+python main.py train -m cnn               # 训练现代CNN
+
+# 评估
+python main.py evaluate                   # 评估LeNet-5
+python main.py evaluate -m cnn            # 评估CNN
+
+# 演示
+python main.py demo --samples 5           # LeNet-5演示
+python main.py demo -m cnn --samples 10   # CNN演示
+
+# 预测自定义图像
+python main.py predict my_digit.png
+python main.py predict -m cnn my_digit.png
 ```
 
-训练脚本将会：
-- 自动下载MNIST数据集到`./data`目录
-- 训练LeNet-5模型10个epoch
-- 保存训练好的模型到`lenet5_mnist.pth`
-- 生成训练历史图表`training_history.png`
-
-### LeNet-5推理预测
+### 直接运行脚本
 
 ```bash
-python lenet5_inference.py
+python train.py       # 训练LeNet-5（独立运行）
+python inference.py   # 交互式推理（独立运行）
 ```
 
-推理脚本提供交互式菜单：
-1. 使用MNIST测试集随机样本进行演示
-2. 预测自定义图像文件
-3. 评估模型在整个测试集上的性能
-4. 退出
-
-### 训练现代CNN
-
-```bash
-python cnn.py
-```
-
-可选参数：
-- `--batch-size`：训练批次大小（默认64）
-- `--epochs`：训练轮数（默认4）
-- `--lr`：学习率（默认1.0）
-- `--use_gpu`：启用MPS加速（默认使用CPU）
-- `--save-model`：保存训练好的模型
 
 ## 特性
 
 ### 设备支持
-代码自动检测并使用可用的最佳计算设备（LeNet-5脚本）：
+所有脚本自动检测并使用可用的最佳计算设备：
 1. Apple Silicon MPS (优先)
 2. NVIDIA CUDA
 3. CPU (后备)
 
-注意：`cnn.py` 默认使用CPU，需要通过 `--use_gpu` 参数手动启用MPS。
-
 ### 数据预处理
-- 将MNIST 28×28图像调整为32×32（符合LeNet-5标准输入）
+- LeNet-5：将28×28调整为32×32；CNN：保持28×28
 - 标准化：均值0.1307，标准差0.3081
 - 自动支持RGB到灰度转换
 
 ### 模型保存格式
-模型以PyTorch字典格式保存：
+模型以统一的PyTorch字典格式保存：
 ```python
 {
     'model_state_dict': model.state_dict(),
-    'model_architecture': 'LeNet5'
+    'model_architecture': 'LeNet5'  # 或 'CNN'
 }
 ```
-加载时需要确保 `LeNet5` 类可导入（checkpoint只保存权重，不保存模型定义）。
+加载时需要确保对应的模型类可导入（checkpoint只保存权重，不保存模型定义）。
 
 ## 预期性能
 
@@ -122,9 +112,13 @@ python cnn.py
 
 ## 自定义图像预测
 
-1. 准备图像文件（支持常见格式：PNG、JPG等）
-2. 运行 `python lenet5_inference.py` 选择选项2
-3. 输入图像路径
+```bash
+python main.py predict my_digit.png
+# 或
+python main.py predict -m cnn my_digit.png
+```
+
+也可交互式运行：`python inference.py` 选择选项2。
 
 **注意**：为获得最佳效果，图像应该：
 - 包含清晰的手写数字
@@ -144,7 +138,7 @@ pip install torchvision
 
 ### DataLoader崩溃或卡死
 
-如果在macOS上训练时程序崩溃或卡死，将 `lenet5_train.py` 中的 `num_workers=2` 改为 `num_workers=0` 即可。
+如果在macOS上训练时程序崩溃或卡死，将 `train.py` 中的 `num_workers=2` 改为 `num_workers=0` 即可。
 
 ## 依赖包
 
