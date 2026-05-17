@@ -52,6 +52,23 @@ LeNet-5是Yann LeCun在1998年提出的经典卷积神经网络，包含：
 pip install -r requirements.txt
 ```
 
+### 数据集
+
+MNIST 数据集会在首次训练时自动下载到 `./data/` 目录，无需手动操作。
+
+```bash
+python main.py train
+# 首次运行输出：Downloading http://yann.lecun.com/exdb/mnist/...
+# 下载完成后 data/ 目录结构：
+#   data/MNIST/raw/
+#     ├── train-images-idx3-ubyte.gz    # 训练图像 (60,000张)
+#     ├── train-labels-idx1-ubyte.gz    # 训练标签
+#     ├── t10k-images-idx3-ubyte.gz     # 测试图像 (10,000张)
+#     └── t10k-labels-idx1-ubyte.gz     # 测试标签
+```
+
+如果下载过慢，可手动从 [MNIST 官网](http://yann.lecun.com/exdb/mnist/) 下载上述四个 `.gz` 文件放入 `data/MNIST/raw/` 即可。
+
 ### 统一CLI（推荐）
 
 ```bash
